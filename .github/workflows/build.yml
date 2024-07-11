@@ -1,0 +1,74 @@
+name: Build image
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  packages: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        archs: ["amd64"]
+        versions: ["8.2", "8.3"]
+        options: ["", "-debug", "-opt"]
+        include:
+          - options: ""
+            configure_append: ""
+            optimize_options_c_cpp: "-O2"
+            optimize_options_ld: "-O1"
+          - options: "-debug"
+            configure_append: "--enable-debug"
+            optimize_options_c_cpp: "-O0"
+            optimize_options_ld: "-O0"
+          - optimize_flag: "-opt"
+            configure_append: ""
+            optimize_options_c_cpp: "-O3"
+            optimize_options_ld: "-O2"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+      - name: Checkout latest PHP version
+        if: ! startsWith(github.ref, 'refs/tags/')
+        run: |
+          cd "third_party/php/php-src"
+          git checkout "$(git tag | grep -E "^php-${{ matrix.versions }}.[0-9]+$" | sort -V | tail -n1)"
+      - name: Determine tags
+        id: container_tags
+        run: |
+          cd "third_party/php/php-src"
+          echo "values=ghcr.io/${{ github.repository }}:$(git describe --tags --abbrev=0 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")${{ matrix.options }}-base${{ startsWith(github.ref, 'refs/tags/') && ',ghcr.io/${{ github.repository }}:$(git describe --tags --abbrev=0 | grep -oE "[0-9]+\.[0-9]+")${{ matrix.options }}-base' || '' }}" >> $GITHUB_OUTPUT
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: "arm64"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Packages Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          build-args: |
+            ARCH=${{ matrix.archs }}
+            DP_CFLAGS_OPTIMIZE=${{ matrix.optimize_options_c_cpp }}
+            DP_CPPFLAGS_OPTIMIZE=${{ matrix.optimize_options_c_cpp }}
+            DP_LDFLAGS_OPTIMIZE=${{ matrix.optimize_options_ld }}
+            DP_PHP_CONFIGURE_OPTIONS_APPEND=${{ matrix.configure_append }}
+          tags: ${{ steps.container_tags.outputs.values }}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Asia/Tokyo",
+  "git-submodules": {
+    "enabled": true,
+    "versioning": "git",
+    "fileMatch": [
+      "(^|/)\\.gitmodules$"
+    ]
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["git-submodules"],
+      "enabled": false
+    },
+    {
+      "matchDepNames": [
+        "dependency_resolve"
+      ],
+      "matchManagers": ["git-submodules"],
+      "enabled": true
+    },
+    {
+      "matchDepNames": ["distroless-php/dependency_resolve"],
+      "matchManagers": ["regex"],
+      "enabled": false
+    },
+    {
+      "matchDepNames": ["alpinelinux/aports"],
+      "matchManagers": ["regex"],
+      "versioning": "semver",
+      "allowedVersions": "/^v[0-9]+\\.[0-9]+\\.[0-9]+$/"
+    },
+    {
+      "matchDepNames": ["GNOME/libxml2"],
+      "matchManagers": ["regex"],
+      "versioning": "semver",
+      "allowedVersions": "/^v[0-9]+\\.[0-9]+\\.[0-9]+$/"
+    },
+    {
+      "matchDepNames": ["php/php-src"],
+      "matchManagers": ["regex"],
+      "versioning": "regex:^php-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$",
+      "allowedVersions": "/^php\\-[0-9]+\\.[0-9]+\\.[0-9]+$/"
+    },
+    {
+      "matchDepNames": ["unicode-org/icu"],
+      "matchManagers": ["regex"],
+      "versioning": "regex:^release\\-(?<major>\\d+)\\-(?<minor>\\d+)$",
+      "allowedVersions": "/^release\\-[0-9]+\\-[0-9]+$/"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^\\.gitmodules$"],
+      "matchStrings": [
+        "\\[submodule \"(?<depName>.+)\"\\][^\\[]*?\\n\\s*branch\\s*=\\s*(?<currentValue>.*)"
+      ],
+      "datasourceTemplate": "github-tags",
+      "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}"
+    }
+  ],
+  "postUpgradeTasks": {
+    "commands": [
+      "(test \"{{{manager}}}\" = \"regex\" && git submodule update && git submodule init \"$(git config --file \".gitmodules\" submodule.{{{depName}}}.path)\" && git submodule update \"$(git config --file \".gitmodules\" submodule.{{{depName}}}.path)\" && (cd \"$(git config --file \".gitmodules\" submodule.{{{depName}}}.path)\" && git fetch --tags && git checkout \"{{{newVersion}}}\")) || true",
+      "(test \"{{{manager}}}\" = \"git-submodules\" && for SUBMODULE_PATH in $(grep \"path\" \".gitmodules\" | cut -d' ' -f3 | grep -v \"{{{depName}}}\"); do git submodule update \"${SUBMODULE_PATH}\"; done) || true"
+    ]
+  }
+}

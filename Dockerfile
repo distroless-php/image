@@ -8,10 +8,10 @@ ARG DP_LDFLAGS_OPTIMIZE="-O1"
 ARG DP_LDFLAGS="-Wl,${DP_LDFLAGS_OPTIMIZE} -pie"
 ARG DP_PHP_INI_DIR="/usr/local/etc/php"
 ARG DP_PHP_DEB_PACKAGES="libgmp-dev libzip-dev libyaml-dev libzstd-dev libargon2-dev libcurl4-openssl-dev libonig-dev libreadline-dev libsodium-dev libsqlite3-dev libssl-dev zlib1g-dev"
-ARG DP_PHP_CONFIGURE_OPTIONS="--enable-bcmath --enable-exif --enable-intl --enable-pcntl --enable-sockets --enable-sysvmsg --enable-sysvsem --enable-sysvshm --with-gmp --with-pdo-mysql --with-zip --with-pic --enable-mysqlnd --with-password-argon2 --with-sodium --with-pdo-sqlite=/usr --with-sqlite3=/usr --with-curl --with-iconv --with-openssl --with-readline --with-zlib --disable-phpdbg --disable-cgi --enable-fpm --with-fpm-user=nonroot --with-fpm-group=nonroot"
-ARG DP_PHP_SAPIS="/usr/local/bin/php"
+ARG DP_PHP_CONFIGURE_OPTIONS_APPEND=""
+ARG DP_PHP_CONFIGURE_OPTIONS="--enable-bcmath --enable-exif --enable-intl --enable-pcntl --enable-sockets --enable-sysvmsg --enable-sysvsem --enable-sysvshm --with-gmp --with-pdo-mysql --with-zip --with-pic --enable-mysqlnd --with-password-argon2 --with-sodium --with-pdo-sqlite=/usr --with-sqlite3=/usr --with-curl --with-iconv --with-openssl --with-readline --with-zlib --disable-phpdbg --disable-cgi --enable-fpm --with-fpm-user=nonroot --with-fpm-group=nonroot ${DP_PHP_CONFIGURE_OPTIONS_APPEND}"
 
-FROM --platform="linux/${ARCH}" debian:12 AS base
+FROM --platform="linux/${ARCH}" debian:12
 
 ARG DP_CFLAGS_OPTIMIZE
 ARG DP_CFLAGS
@@ -22,7 +22,6 @@ ARG DP_LDFLAGS
 ARG DP_PHP_INI_DIR
 ARG DP_PHP_DEB_PACKAGES
 ARG DP_PHP_CONFIGURE_OPTIONS
-ARG DP_PHP_SAPIS
 
 # base
 RUN apt-get update \
@@ -68,22 +67,4 @@ RUN apt-get update \
 
 # Generate rootfs
 COPY --chmod=755 "dependency_resolve/dependency_resolve" "/usr/local/bin/dependency_resolve"
-RUN dependency_resolve \
-      "/usr/bin/ldd" \
-        ${DP_PHP_SAPIS} \
-        $(find "$(php-config --extension-dir)" -type f) \
-    | xargs -I {} sh -c 'mkdir -p /rootfs/$(dirname "{}") && cp -apP "{}" /rootfs/{}' \
- && find "/rootfs" -type f -print0 | xargs -0 -n 1 sh -c 'strip --strip-all "$0" || true'
-
-FROM --platform="linux/${ARCH}" busybox:latest AS busybox
-
-FROM --platform="linux/${ARCH}" gcr.io/distroless/base-nossl-debian12
-
-COPY --from=busybox "/bin/busybox" "/bin/busybox"
-RUN ["/bin/busybox", "--install", "-s"]
-
-COPY --from=base "/rootfs" "/"
-
-USER nonroot
-
-ENTRYPOINT ["/bin/sh"]
+COPY --chmod=755 "distroless_php_add_binary" "/usr/local/bin/distroless_php_add_binary"

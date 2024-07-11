@@ -1,0 +1,23 @@
+#!/bin/sh
+
+if [ ${#} -eq 0 ] || [ "${1}" == "--help" ]; then
+    echo "Usage: distroless_php_add_binary <absolute path for executable>..."
+    exit 1
+fi
+
+for BIN in "${@}"; do
+    case "${BIN}" in
+        /*)
+            if [ ! -f "${BIN}" ] || [ ! -x "${BIN}" ]; then
+                echo "Error: ${BIN} not found or not executable file."
+                exit 2
+            fi
+            ;;
+        *)
+            echo "Error: ${BIN} is not absolute path."
+            exit 3
+            ;;
+    esac
+done
+
+dependency_resolve "/usr/bin/ldd" ${@} | xargs -I {} sh -c 'mkdir -p /rootfs/$(dirname "{}") && cp -apP "{}" /rootfs/{}'
