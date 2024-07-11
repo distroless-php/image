@@ -1,11 +1,11 @@
 ARG ARCH="arm64/v8"
 
 ARG DP_CFLAGS_OPTIMIZE="-O2"
-ARG DP_CFLAGS="-fstack-protector-strong -fpic -fpie ${DP_CFLAGS_OPTIMIZE}"
+ARG DP_PHP_CFLAGS="-fstack-protector-strong -fpic -fpie ${DP_CFLAGS_OPTIMIZE}"
 ARG DP_CPPFLAGS_OPTIMIZE="-O2"
-ARG DP_CPPFLAGS="-fstack-protector-strong -fpic -fpie ${DP_CPPFLAGS_OPTIMIZE}"
+ARG DP_PHP_CPPFLAGS="-fstack-protector-strong -fpic -fpie ${DP_CPPFLAGS_OPTIMIZE}"
 ARG DP_LDFLAGS_OPTIMIZE="-O1"
-ARG DP_LDFLAGS="-Wl,${DP_LDFLAGS_OPTIMIZE} -pie"
+ARG DP_PHP_LDFLAGS="-Wl,${DP_LDFLAGS_OPTIMIZE} -pie"
 ARG DP_PHP_INI_DIR="/usr/local/etc/php"
 ARG DP_PHP_DEB_PACKAGES="libgmp-dev libzip-dev libyaml-dev libzstd-dev libargon2-dev libcurl4-openssl-dev libonig-dev libreadline-dev libsodium-dev libsqlite3-dev libssl-dev zlib1g-dev"
 ARG DP_PHP_CONFIGURE_OPTIONS_APPEND=""
@@ -14,11 +14,11 @@ ARG DP_PHP_CONFIGURE_OPTIONS="--enable-bcmath --enable-exif --enable-intl --enab
 FROM --platform="linux/${ARCH}" debian:12
 
 ARG DP_CFLAGS_OPTIMIZE
-ARG DP_CFLAGS
+ARG DP_PHP_CFLAGS
 ARG DP_CPPFLAGS_OPTIMIZE
-ARG DP_CPPFLAGS
+ARG DP_PHP_CPPFLAGS
 ARG DP_LDFLAGS_OPTIMIZE
-ARG DP_LDFLAGS
+ARG DP_PHP_LDFLAGS
 ARG DP_PHP_INI_DIR
 ARG DP_PHP_DEB_PACKAGES
 ARG DP_PHP_CONFIGURE_OPTIONS
@@ -35,7 +35,7 @@ RUN apt-get update \
  && apt-get install -y "python3" "python3-yaml" \
  && cd "/build/icu/icu4c/source" \
  &&   python3 -c 'import sys, yaml, json; json.dump(yaml.safe_load(sys.stdin), sys.stdout)' < "/build/icu/data-filter-en.yml" > "/build/icu/data-filter-en.json" \
- &&   ICU_DATA_FILTER_FILE="/build/icu/data-filter-en.json" DP_CFLAGS="${DP_CFLAGS_OPTIMIZE}" DP_CPPFLAGS="${DP_CPPFLAGS_OPTIMIZE}" DP_LDFLAGS="${DP_LDFLAGS_OPTIMIZE}" ./configure --prefix="/usr" --with-data-packaging=static --disable-samples --enable-shared --disable-static \
+ &&   ICU_DATA_FILTER_FILE="/build/icu/data-filter-en.json" DP_PHP_CFLAGS="${DP_CFLAGS_OPTIMIZE}" DP_PHP_CPPFLAGS="${DP_CPPFLAGS_OPTIMIZE}" DP_PHP_LDFLAGS="${DP_LDFLAGS_OPTIMIZE}" ./configure --prefix="/usr" --with-data-packaging=static --disable-samples --enable-shared --disable-static \
  &&   make -j"$(nproc)" \
  &&   make install \
  && cd -
@@ -56,7 +56,7 @@ RUN apt-get update \
  && apt-get install -y ${DP_PHP_DEB_PACKAGES} \
  && cd "/build/php-src" \
  &&   ./buildconf --force \
- &&   CFLAGS="-I/usr/include/libxml2 ${DP_CFLAGS}" CPPFLAGS="-I/usr/include/libxml2 ${DP_CPPFLAGS}" LDFLAGS="${DP_LDFLAGS}" ./configure \
+ &&   CFLAGS="-I/usr/include/libxml2 ${DP_PHP_CFLAGS}" CPPFLAGS="-I/usr/include/libxml2 ${DP_PHP_CPPFLAGS}" LDFLAGS="${DP_PHP_LDFLAGS}" ./configure \
         --with-config-file-path="${DP_PHP_INI_DIR}" \
         --with-config-file-scan-dir="${DP_PHP_INI_DIR}/conf.d" \
         --enable-option-checking=fatal \
@@ -65,6 +65,5 @@ RUN apt-get update \
  &&   make install \
  && cd -
 
-# Generate rootfs
 COPY --chmod=755 "dependency_resolve/dependency_resolve" "/usr/local/bin/dependency_resolve"
 COPY --chmod=755 "distroless_php_add_binary" "/usr/local/bin/distroless_php_add_binary"
