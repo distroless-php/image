@@ -47,8 +47,8 @@ jobs:
         id: container_tags
         run: |
           cd "third_party/php/php-src"
-          echo full="ghcr.io/${{ github.repository }}:$(git describe --tags --abbrev=0 | grep -oE \"[0-9]+\.[0-9]+\.[0-9]+")${{ matrix.options }}-base" >> $GITHUB_OUTPUT
-          echo short="ghcr.io/${{ github.repository }}:$(git describe --tags --abbrev=0 | grep -oE \"[0-9]+\.[0-9]+")${{ matrix.options }}-base" >> $GITHUB_OUTPUT
+          echo full="ghcr.io/${{ github.repository }}:$(git describe --tags --abbrev=0 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")${{ matrix.options }}-base" >> $GITHUB_OUTPUT
+          echo short="ghcr.io/${{ github.repository }}:$(git describe --tags --abbrev=0 | grep -oE "[0-9]+\.[0-9]+")${{ matrix.options }}-base" >> $GITHUB_OUTPUT
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
         with:
