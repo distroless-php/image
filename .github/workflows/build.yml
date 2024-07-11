@@ -13,9 +13,10 @@ permissions:
 jobs:
   build:
     strategy:
+      max-parallel: 1
       matrix:
         archs: ["amd64"]
-        versions: ["8.2", "8.3"]
+        versions: ["8.2"]
         options: ["", "-debug", "-opt"]
         include:
           - options: ""
@@ -26,7 +27,7 @@ jobs:
             configure_append: "--enable-debug"
             optimize_options_c_cpp: "-O0"
             optimize_options_ld: "-O0"
-          - optimize_flag: "-opt"
+          - options: "-opt"
             configure_append: ""
             optimize_options_c_cpp: "-O3"
             optimize_options_ld: "-O2"
@@ -46,12 +47,12 @@ jobs:
         id: container_tags
         run: |
           cd "third_party/php/php-src"
-          echo "values=ghcr.io/${{ github.repository }}:$(git describe --tags --abbrev=0 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")${{ matrix.options }}-base${{ startsWith(github.ref, 'refs/tags/') && ',ghcr.io/${{ github.repository }}:$(git describe --tags --abbrev=0 | grep -oE "[0-9]+\.[0-9]+")${{ matrix.options }}-base' || '' }}" >> $GITHUB_OUTPUT
+          echo "values=ghcr.io/${{ github.repository }}:$(git describe --tags --abbrev=0 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")${{ matrix.options }}-base${{ !startsWith(github.ref, 'refs/tags/') && ',ghcr.io/${{ github.repository }}:$(git describe --tags --abbrev=0 | grep -oE "[0-9]+\.[0-9]+")${{ matrix.options }}-base' || '' }}" >> $GITHUB_OUTPUT
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: "arm64"
-      - name: Set up Docker Buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to GitHub Packages Container Registry
         uses: docker/login-action@v3
