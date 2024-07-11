@@ -38,7 +38,7 @@ jobs:
           submodules: true
           fetch-depth: 0
       - name: Checkout latest PHP version
-        if: ! startsWith(github.ref, 'refs/tags/')
+        if: '!startsWith(github.ref, ''refs/tags/'')'
         run: |
           cd "third_party/php/php-src"
           git checkout "$(git tag | grep -E "^php-${{ matrix.versions }}.[0-9]+$" | sort -V | tail -n1)"
