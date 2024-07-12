@@ -34,6 +34,7 @@ jobs:
     name: Build variant images
     runs-on: ${{ inputs.runs-on }}
     strategy:
+      max-parallel: 3
       matrix:
         types: ${{ fromJson(inputs.types) }}
         include: ${{ fromJson(inputs.image_variants) }}

@@ -19,8 +19,6 @@ jobs:
   build_base:
     needs: generate_image_variants
     uses: ./.github/workflows/___build_base.yml
-    strategy:
-      max-parallel: 3
     with:
       image_variants: ${{ needs.generate_image_variants.outputs.values }}
       enable_minor: true
@@ -41,8 +39,6 @@ jobs:
   build_variants:
     needs: ["determine_types", "generate_image_variants", "build_base"]
     uses: ./.github/workflows/___build_variants.yml
-    strategy:
-      max-parallel: 3
     with:
       types: ${{ fromJson(needs.determine_types.outputs.values) }}
       image_variants: ${{ needs.generate_image_variants.outputs.values }}
