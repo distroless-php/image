@@ -35,7 +35,7 @@ jobs:
       - name: Determine types
         id: determine_types
         run: |
-          echo values="$(ls "types")" >> $GITHUB_OUTPUT
+          echo values=$(ls "types" | jq -R -s -c 'split("\n")[:-1]') >> $GITHUB_OUTPUT
     outputs:
       values: ${{ steps.determine_types.outputs.values }}
   build_variants:
