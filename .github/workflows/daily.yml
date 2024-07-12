@@ -1,7 +1,7 @@
 name: Daily build
 
 on:
-  workflow_dispatch:
+  push:
 
 permissions:
   packages: write
@@ -42,9 +42,17 @@ jobs:
     with:
       base: ${{ needs.generate_image_variants.outputs.values }}
       join: ${{ needs.determine_types.outputs.values }}
-  build_variants:
+  debug:
     needs: mixin_types
-    uses: ./.github/workflows/___build_variants.yml
-    with:
-      matrix_include: ${{ needs.mixin_types.outputs.values }}
-      enable_minor: true
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          VALUES: ${{ needs.mixin_types.outputs.values }}
+        run: |
+          echo ${VALUES}
+  # build_variants:
+  #   needs: mixin_types
+  #   uses: ./.github/workflows/___build_variants.yml
+  #   with:
+  #     matrix_include: ${{ needs.mixin_types.outputs.values }}
+  #     enable_minor: true
