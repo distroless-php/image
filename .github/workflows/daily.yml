@@ -16,12 +16,12 @@ jobs:
     uses: ./.github/workflows/__generate_image_variants.yml
     with:
       php_versions_json: ${{ needs.determine_php_versions.outputs.values }}
-  build_base:
-    needs: generate_image_variants
-    uses: ./.github/workflows/___build_base.yml
-    with:
-      image_variants: ${{ needs.generate_image_variants.outputs.values }}
-      enable_minor: true
+  # build_base:
+  #   needs: generate_image_variants
+  #   uses: ./.github/workflows/___build_base.yml
+  #   with:
+  #     image_variants: ${{ needs.generate_image_variants.outputs.values }}
+  #     enable_minor: true
   determine_types:
     runs-on: ubuntu-latest
     steps:
@@ -37,7 +37,7 @@ jobs:
     outputs:
       values: ${{ steps.determine_types.outputs.values }}
   build_variants:
-    needs: ["determine_types", "generate_image_variants", "build_base"]
+    needs: ["determine_types", "generate_image_variants"]
     uses: ./.github/workflows/___build_variants.yml
     with:
       types: ${{ needs.determine_types.outputs.values }}
