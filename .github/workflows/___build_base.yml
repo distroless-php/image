@@ -22,9 +22,13 @@ jobs:
       matrix:
         include: ${{ fromJson(inputs.image_variants) }}
     steps:
+      - name: Determine tags
+        id: determine_tags
+        run: |
+          echo "values=ghcr.io/${{ github.repository }}:${{ matrix.tag }}${{ matrix.variant }}-base${{ inputs.enable_minor && format(',ghcr.io/{0}:{1}{2}-base', github.repository, matrix.minor, matrix.variant) || '' }}" >> $GITHUB_OUTPUT
       - name: Test
         run: |
-          echo "para"
+          echo "${{ steps.determine_tags.outputs.values }}"
       # - name: Checkout
       #   uses: actions/checkout@v4
       #   with:
@@ -51,7 +55,7 @@ jobs:
       #     github-token: ${{ secrets.GITHUB_TOKEN }}
       #     platforms: ${{ matrix.platforms }}
       #     build-args: |
-      #       DP_CFLAGS_OPTIMIZE=${{ inputs.optimize_c_cpp }}
-      #       DP_CPPFLAGS_OPTIMIZE=${{ inputs.optimize_c_cpp }}
-      #       DP_LDFLAGS_OPTIMIZE=${{ inputs.optimize_ld }}
-      #       DP_PHP_CONFIGURE_OPTIONS_APPEND=${{ inputs.configure }}
+      #       DP_CFLAGS_OPTIMIZE=${{ matrix.optimize_options_c_cpp }}
+      #       DP_CPPFLAGS_OPTIMIZE=${{ matrix.optimize_options_c_cpp }}
+      #       DP_LDFLAGS_OPTIMIZE=${{ matrix.optimize_ld }}
+      #       DP_PHP_CONFIGURE_OPTIONS_APPEND=${{ matrix.configure_append }}
