@@ -41,7 +41,7 @@ jobs:
     steps:
       - name: test
         env:
-          MATRIX: ${{ fromJson(matrix) }}
+          MATRIX: ${{ toJson(matrix) }}
         run: |
           echo "${MATRIX}"
       # - name: Determine informations
