@@ -42,17 +42,9 @@ jobs:
     with:
       base: ${{ needs.generate_image_variants.outputs.values }}
       join: ${{ needs.determine_types.outputs.values }}
-  debug:
+  build_variants:
     needs: mixin_types
-    runs-on: ubuntu-latest
-    steps:
-      - env:
-          VALUES: ${{ needs.mixin_types.outputs.values }}
-        run: |
-          echo ${VALUES}
-  # build_variants:
-  #   needs: mixin_types
-  #   uses: ./.github/workflows/___build_variants.yml
-  #   with:
-  #     matrix_include: ${{ needs.mixin_types.outputs.values }}
-  #     enable_minor: true
+    uses: ./.github/workflows/___build_variants.yml
+    with:
+      matrix_include: ${{ needs.mixin_types.outputs.values }}
+      enable_minor: true
