@@ -7,10 +7,7 @@ on:
         type: string
         required: false
         default: "types"
-      types:
-        type: string
-        required: true
-      image_variants:
+      matrix_include:
         type: string
         required: true
       runs-on:
@@ -36,7 +33,7 @@ jobs:
     strategy:
       max-parallel: 3
       matrix:
-        include: ${{ fromJson(inputs.image_variants) }}
+        include: ${{ fromJson(inputs.matrix_include) }}
     steps:
       - name: test
         env:

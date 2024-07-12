@@ -36,10 +36,15 @@ jobs:
           echo values=$(ls "types" | jq -R -s -c 'split("\n")[:-1]') >> $GITHUB_OUTPUT
     outputs:
       values: ${{ steps.determine_types.outputs.values }}
+  mixin_types:
+    needs: ["determine_php_versions", "determine_types"]
+    uses: ./.github/workflows/_mixin_values.yml
+    with:
+      base: ${{ needs.determine_php_versions.outputs.values }}
+      join: ${{ needs.determine_types.outputs.values }}
   build_variants:
-    needs: ["determine_types", "generate_image_variants"]
+    needs: mixin_types
     uses: ./.github/workflows/___build_variants.yml
     with:
-      types: ${{ needs.determine_types.outputs.values }}
-      image_variants: ${{ needs.generate_image_variants.outputs.values }}
+      matrix_include: ${{ needs.mixin_types.outputs.values }}
       enable_minor: true

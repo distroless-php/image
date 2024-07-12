@@ -12,23 +12,34 @@ on:
         value: ${{ jobs.variants.outputs.values }}
 
 jobs:
+  yq:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          VALUE: |
+            - variant: ""
+              configure_append: ""
+              optimize_options_c_cpp: "-O2"
+              optimize_options_ld: "-O1"
+            - variant: "-debug"
+              configure_append: "--enable-debug"
+              optimize_options_c_cpp: "-O0"
+              optimize_options_ld: "-O0"
+            - variant: "-opt"
+              configure_append: ""
+              optimize_options_c_cpp: "-O3"
+              optimize_options_ld: "-O2"
+        id: yq
+        run: |
+          echo values="${VALUE}" | yq -o=json >> $GITHUB_OUTPUT
+    outputs:
+      values: ${{ steps.yq.outputs.values }}
   mixin:
+    needs: yq
     uses: ./.github/workflows/_mixin_values.yml
     with:
-      base_json: ${{ inputs.php_versions_json }}
-      mixin_yaml: |
-        - variant: ""
-          configure_append: ""
-          optimize_options_c_cpp: "-O2"
-          optimize_options_ld: "-O1"
-        - variant: "-debug"
-          configure_append: "--enable-debug"
-          optimize_options_c_cpp: "-O0"
-          optimize_options_ld: "-O0"
-        - variant: "-opt"
-          configure_append: ""
-          optimize_options_c_cpp: "-O3"
-          optimize_options_ld: "-O2"
+      base: ${{ inputs.php_versions_json }}
+      join: ${{ needs.yq.outputs.values }}
   variants:
     needs: mixin
     runs-on: ubuntu-latest

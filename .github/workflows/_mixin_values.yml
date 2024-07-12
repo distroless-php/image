@@ -3,10 +3,10 @@ name: _Mixin values
 on:
   workflow_call:
     inputs:
-      base_json:
+      base:
         type: string
         required: true
-      mixin_yaml:
+      join:
         type: string
         required: true
     outputs:
@@ -20,11 +20,11 @@ jobs:
     steps:
       - id: mixin
         env:
-          BASE: ${{ inputs.base_json }}
-          MIXIN: ${{ inputs.mixin_yaml }}
+          BASE: ${{ inputs.base }}
+          JOIN: ${{ inputs.join }}
         run: |
           echo "${BASE}" > "base.json"
-          echo "${MIXIN}" | yq -o=json > "mixin.json"
-          echo values=$(jq --argjson "mixin" "$(cat "mixin.json")" '[.[] | $mixin[] as $y | . + $y]' "base.json") >> $GITHUB_OUTPUT
+          echo "${MIXIN}" > "join.json"
+          echo values=$(jq --argjson "mixin" "$(cat "join.json")" '[.[] | $mixin[] as $y | . + $y]' "base.json") >> $GITHUB_OUTPUT
     outputs:
       values: ${{ steps.mixin.outputs.values }}
