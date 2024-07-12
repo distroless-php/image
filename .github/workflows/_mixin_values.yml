@@ -24,7 +24,7 @@ jobs:
           JOIN: ${{ inputs.join }}
         run: |
           echo "${BASE}" > "base.json"
-          echo "${MIXIN}" > "join.json"
+          echo "${JOIN}" > "join.json"
           echo values=$(jq --argjson "mixin" "$(cat "join.json")" '[.[] | $mixin[] as $y | . + $y]' "base.json") >> $GITHUB_OUTPUT
     outputs:
       values: ${{ steps.mixin.outputs.values }}
