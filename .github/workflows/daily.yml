@@ -27,6 +27,11 @@ jobs:
   determine_types:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 1
       - name: Determine types
         id: determine_types
         run: |
