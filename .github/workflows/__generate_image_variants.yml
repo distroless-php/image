@@ -31,7 +31,7 @@ jobs:
               optimize_options_ld: "-O2"
         id: yq
         run: |
-          echo values="${VALUE}" | yq -o=json >> $GITHUB_OUTPUT
+          echo values=$(echo "${VALUE}" | yq -o=json) >> $GITHUB_OUTPUT
     outputs:
       values: ${{ steps.yq.outputs.values }}
   mixin:
