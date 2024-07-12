@@ -1,0 +1,104 @@
+name: Build image
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  packages: write
+
+jobs:
+  generate_matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - name : Generate matrix
+        id: generate_matrix
+        env:
+          _gm_archs: '["amd64/v3"]'
+          _gm_versions: '["8.2", "8.3"]'
+          _gm_options: '["", "-debug", "-opt"]'
+        run: |
+          echo "values=$(printenv | grep '^_gm_' | sed 's/^_gm_//' | jq -R 'split("=") | {(.[0]): .[1]}' | jq -s -c 'add')" >> $GITHUB_OUTPUT
+    outputs:
+      values: ${{ steps.generate_matrix.outputs.values }}
+  build_base:
+    needs: generate_matrix
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 3
+      matrix:
+        archs: ${{ fromJson(needs.generate_matrix.outputs.values).archs }}
+        versions: ${{ fromJson(needs.generate_matrix.outputs.values).versions }}
+        options: ${{ fromJson(needs.generate_matrix.outputs.values).options }}
+        include:
+          - options: ""
+            configure_append: ""
+            optimize_options_c_cpp: "-O2"
+            optimize_options_ld: "-O1"
+          - options: "-debug"
+            configure_append: "--enable-debug"
+            optimize_options_c_cpp: "-O0"
+            optimize_options_ld: "-O0"
+          - options: "-opt"
+            configure_append: ""
+            optimize_options_c_cpp: "-O3"
+            optimize_options_ld: "-O2"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+      - name: Checkout latest PHP version
+        if: '!startsWith(github.ref, ''refs/tags/'')'
+        run: |
+          cd "third_party/php/php-src"
+          git checkout "$(git tag | grep -E "^php-${{ matrix.versions }}.[0-9]+$" | sort -V | tail -n1)"
+      - name: Determine names
+        id: container_name
+        run: |
+          cd "third_party/php/php-src"
+          if test "${{ !startsWith(github.ref, 'refs/tags') && '1' || '0'  }}" -eq "1"; then
+            echo name="$(git describe --tags --abbrev=0 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")" >> $GITHUB_OUTPUT
+            echo subname="$(git describe --tags --abbrev=0 | grep -oE "[0-9]+\.[0-9]+")" >> $GITHUB_OUTPUT
+          else
+            echo name="${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: "arm64"
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Packages Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and Push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          pull: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          tags: "ghcr.io/${{ github.repository }}:${{ steps.container_name.outputs.name }}${{ matrix.options }}-base${{ steps.container_name.outputs.subname && format(',ghcr.io/{0}:{1}{2}-base', github.repository, steps.container_name.outputs.subname, matrix.options) || '' }}"
+          build-args: |
+            ARCH=${{ matrix.archs }}
+            DP_CFLAGS_OPTIMIZE=${{ matrix.optimize_options_c_cpp }}
+            DP_CPPFLAGS_OPTIMIZE=${{ matrix.optimize_options_c_cpp }}
+            DP_LDFLAGS_OPTIMIZE=${{ matrix.optimize_options_ld }}
+            DP_PHP_CONFIGURE_OPTIONS_APPEND=${{ matrix.configure_append }}
+    outputs:
+      tag: ${{ steps.container_name.outputs.name }}
+  build_variants:
+    needs: ["generate_matrix", "build_base"]
+    uses: ./.github/build_variants.yml
+    with:
+      archs: ${{ needs.generate_matrix. }}
+      tag: ${{ needs.build_base.outptus.tag }}
+      

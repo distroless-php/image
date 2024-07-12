@@ -1,0 +1,17 @@
+name: Build variants
+
+on:
+  workflow_call:
+    inputs:
+      archs:
+        required: true
+        type: string
+      options:
+        required: true
+        type: string
+      variants:
+        required: true
+        type: string
+        tag:
+          required: true
+          type: string

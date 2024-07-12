@@ -1,0 +1,49 @@
+name: Determine PHP version and hash
+
+on:
+  workflow_call:
+    inputs:
+      ignore_versions:
+        type: string
+        required: false
+        default: ""
+    outputs:
+      values:
+        description: "Result"
+        value: ${{ jobs.determine.outputs.values }}
+
+jobs:
+  determine:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get supported PHP versions
+        id: supported_versions
+        run: |
+          curl -sSL "https://www.php.net/releases/index.php?json" | jq -c "[..| objects | .supported_versions? // empty] | flatten" > "versions.json"
+      - name: Determine version and hash
+        run: |
+          curl -sSL \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/php/php-src/git/matching-refs/tags" > "tags.json"
+          jq -r '.[]' "versions.json" | while read VERSION; do
+            jq -r '.[] | (.ref | sub("refs/tags/php-"; "")) + " " + .object.sha' "tags.json" \
+            | grep -E "^${VERSION}\.[0-9]+ " \
+            | sort -V \
+            | tail -n1 >> "versions.txt"
+          done
+      - name: Filitering versions
+        if: ${{ inputs.ignore_versions != '' }}
+        run: |
+          TEMPFILE="$(mktemp)"
+          echo "${{ inputs.ignore_versions }}" | jq -r '.[]' | while read IGNORE; do
+            grep -v "${IGNORE}" < "versions.txt" > "${TEMPFILE}"
+            mv -f "${TEMPFILE}" "versions.txt"
+          done
+      - name: Generate version and hash list
+        id: result
+        run: |
+          echo values="$(jq -R -s -c 'split("\n") | map(select(length > 0)) | map(split(" ")) | map({tag: .[0], minor: (.[0] | split(".") | .[0:2] | join(".")), hash: .[1]})' "versions.txt")" >> $GITHUB_OUTPUT
+    outputs:
+      values: ${{ steps.result.outputs.values }}

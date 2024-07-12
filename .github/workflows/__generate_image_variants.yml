@@ -1,0 +1,49 @@
+name: Generate image variants
+
+on:
+  workflow_call:
+    inputs:
+      php_versions_json:
+        type: string
+        required: true
+    outputs:
+      values:
+        description: "Result"
+        value: ${{ jobs.variants.outputs.values }}
+
+jobs:
+  mixin_flag:
+    uses: ./.github/workflows/_mixin_values.yml
+    with:
+      base_json: ${{ inputs.php_versions_json }}
+      mixin_yaml: |
+        - variant: ""
+          configure_append: ""
+          optimize_options_c_cpp: "-O2"
+          optimize_options_ld: "-O1"
+        - variant: "-debug"
+          configure_append: "--enable-debug"
+          optimize_options_c_cpp: "-O0"
+          optimize_options_ld: "-O0"
+        - variant: "-opt"
+          configure_append: ""
+          optimize_options_c_cpp: "-O3"
+          optimize_options_ld: "-O2"
+  mixin_platforms:
+    needs: mixin_flag
+    uses: ./.github/workflows/_mixin_values.yml
+    with:
+      base_json: ${{ needs.mixin_flag.outputs.values }}
+      mixin_yaml: |
+        - platform: "linux/amd64/v3"
+  variants:
+    needs: mixin_platforms
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULT: ${{ needs.mixin_platforms.outputs.values }}
+        id: variants
+        run: |
+          echo "values=${RESULT}" >> $GITHUB_OUTPUT
+    outputs:
+      values: ${{ steps.variants.outputs.values }}

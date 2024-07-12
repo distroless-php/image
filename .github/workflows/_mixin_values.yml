@@ -1,0 +1,30 @@
+name: Mixin values
+
+on:
+  workflow_call:
+    inputs:
+      base_json:
+        type: string
+        required: true
+      mixin_yaml:
+        type: string
+        required: true
+    outputs:
+      values:
+        description: "Result"
+        value: ${{ jobs.mixin.outputs.values }}
+
+jobs:
+  mixin:
+    runs-on: ubuntu-latest
+    steps:
+      - id: mixin
+        env:
+          BASE: ${{ inputs.base_json }}
+          MIXIN: ${{ inputs.mixin_yaml }}
+        run: |
+          echo "${BASE}" > "base.json"
+          echo "${MIXIN}" | yq -o=json > "mixin.json"
+          echo values=$(jq --argjson "mixin" "$(cat "mixin.json")" '[.[] | $mixin[] as $y | . + $y]' "base.json") >> $GITHUB_OUTPUT
+    outputs:
+      values: ${{ steps.mixin.outputs.values }}
