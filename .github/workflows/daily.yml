@@ -40,6 +40,6 @@ jobs:
     needs: ["determine_types", "generate_image_variants", "build_base"]
     uses: ./.github/workflows/___build_variants.yml
     with:
-      types: ${{ fromJson(needs.determine_types.outputs.values) }}
+      types: ${{ needs.determine_types.outputs.values }}
       image_variants: ${{ needs.generate_image_variants.outputs.values }}
       enable_minor: true
