@@ -1,13 +1,13 @@
-ARG ARCH="arm64/v8"
+ARG PLATFORM="linux/arm64/v8"
 ARG BASE_IMAGE
 ARG DEBIAN_VERSION
 
-FROM --platform="linux/${ARCH}" busybox:latest AS busybox
+FROM --platform="${PLATFORM}" busybox:latest AS busybox
 
-FROM --platform="linux/${ARCH}" ${BASE_IMAGE} AS base
+FROM --platform="${PLATFORM}" ${BASE_IMAGE} AS base
 RUN distroless_php_add_binary "/usr/local/bin/php" $(find "$(php-config --extension-dir)" -type f)
 
-FROM --platform="linux/${ARCH}" gcr.io/distroless/base-nossl-debian${DEBIAN_VERSION}:latest
+FROM --platform="${PLATFORM}" gcr.io/distroless/base-nossl-debian${DEBIAN_VERSION}:latest
 
 COPY --from=busybox "/bin/busybox" "/bin/busybox"
 RUN ["/bin/busybox", "rm", "-rf", "/usr/lib"]

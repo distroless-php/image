@@ -24,3 +24,21 @@ jobs:
     with:
       image_variants: ${{ needs.generate_image_variants.outputs.values }}
       enable_minor: true
+  determine_types:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine types
+        id: determine_types
+        run: |
+          echo values="$(ls "types")" >> $GITHUB_OUTPUT
+    outputs:
+      values: ${{ steps.determine_types.outputs.values }}
+  build_variants:
+    needs: ["determine_types", "generate_image_variants", "build_base"]
+    uses: ./.github/workflows/___build_variants.yml
+    strategy:
+      max-parallel: 3
+    with:
+      types: ${{ fromJson(needs.determine_types.outputs.values) }}
+      image_variants: ${{ needs.generate_image_variants.outputs.values }}
+      enable_minor: true

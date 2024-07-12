@@ -1,4 +1,4 @@
-ARG ARCH="arm64/v8"
+ARG PLATFORM="linux/arm64/v8"
 
 ARG DP_CFLAGS_OPTIMIZE="-O2"
 ARG DP_PHP_CFLAGS="-fstack-protector-strong -fpic -fpie ${DP_CFLAGS_OPTIMIZE}"
@@ -11,7 +11,7 @@ ARG DP_PHP_DEB_PACKAGES="libgmp-dev libzip-dev libyaml-dev libzstd-dev libargon2
 ARG DP_PHP_CONFIGURE_OPTIONS_APPEND=""
 ARG DP_PHP_CONFIGURE_OPTIONS="--enable-bcmath --enable-exif --enable-intl --enable-pcntl --enable-sockets --enable-sysvmsg --enable-sysvsem --enable-sysvshm --with-gmp --with-pdo-mysql --with-zip --with-pic --enable-mysqlnd --with-password-argon2 --with-sodium --with-pdo-sqlite=/usr --with-sqlite3=/usr --with-curl --with-iconv --with-openssl --with-readline --with-zlib --disable-phpdbg --disable-cgi --enable-fpm --with-fpm-user=nonroot --with-fpm-group=nonroot ${DP_PHP_CONFIGURE_OPTIONS_APPEND}"
 
-FROM --platform="linux/${ARCH}" debian:12
+FROM --platform="${PLATFORM}" debian:12
 
 ARG DP_CFLAGS_OPTIMIZE
 ARG DP_PHP_CFLAGS

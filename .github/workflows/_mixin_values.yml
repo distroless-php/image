@@ -1,4 +1,4 @@
-name: Mixin values
+name: _Mixin values
 
 on:
   workflow_call:

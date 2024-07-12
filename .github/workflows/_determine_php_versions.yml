@@ -1,4 +1,4 @@
-name: Determine PHP version and hash
+name: _Determine PHP version and hash
 
 on:
   workflow_call:

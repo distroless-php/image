@@ -1,4 +1,4 @@
-name: Build base
+name: _Build base
 
 on:
   workflow_call:
@@ -6,6 +6,14 @@ on:
       image_variants:
         type: string
         required: true
+      runs-on:
+        type: string
+        required: false
+        default: "ubuntu-latest"
+      platform:
+        type: string
+        required: false
+        default: "linux/amd64/v3"
       enable_minor:
         type: boolean
         required: false
@@ -17,7 +25,7 @@ permissions:
 jobs:
   build:
     name: Build base images
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     strategy:
       matrix:
         include: ${{ fromJson(inputs.image_variants) }}
@@ -26,36 +34,34 @@ jobs:
         id: determine_tags
         run: |
           echo "values=ghcr.io/${{ github.repository }}:${{ matrix.tag }}${{ matrix.variant }}-base${{ inputs.enable_minor && format(',ghcr.io/{0}:{1}{2}-base', github.repository, matrix.minor, matrix.variant) || '' }}" >> $GITHUB_OUTPUT
-      - name: Test
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+      - name: Checkout PHP
         run: |
-          echo "${{ steps.determine_tags.outputs.values }}"
-      # - name: Checkout
-      #   uses: actions/checkout@v4
-      #   with:
-      #     submodules: true
-      #     fetch-depth: 0
-      # - name: Checkout PHP
-      #   run: |
-      #     cd "third_party/php/php-src"
-      #     git checkout "${{ matrix.hash }}"
-      # - name: Setup Buildx
-      #   uses: docker/setup-buildx-action@v3
-      # - name: Login to GitHub Packages - Container Registry
-      #   uses: docker/login-action@v3
-      #   with:
-      #     registry: ghcr.io
-      #     username: ${{ github.actor }}
-      #     password: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Build and Push image
-      #   uses: docker/build-push-action@v6
-      #   with:
-      #     context: .
-      #     push: true
-      #     pull: true
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     platforms: ${{ matrix.platforms }}
-      #     build-args: |
-      #       DP_CFLAGS_OPTIMIZE=${{ matrix.optimize_options_c_cpp }}
-      #       DP_CPPFLAGS_OPTIMIZE=${{ matrix.optimize_options_c_cpp }}
-      #       DP_LDFLAGS_OPTIMIZE=${{ matrix.optimize_ld }}
-      #       DP_PHP_CONFIGURE_OPTIONS_APPEND=${{ matrix.configure_append }}
+          cd "third_party/php/php-src"
+          git checkout "${{ matrix.hash }}"
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Packages - Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and Push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          pull: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          tags: ${{ steps.determine_tags.outputs.values }}
+          build-args: |
+            PLATFORM=${{ inputs.platform }}
+            DP_CFLAGS_OPTIMIZE=${{ matrix.optimize_options_c_cpp }}
+            DP_CPPFLAGS_OPTIMIZE=${{ matrix.optimize_options_c_cpp }}
+            DP_LDFLAGS_OPTIMIZE=${{ matrix.optimize_ld }}
+            DP_PHP_CONFIGURE_OPTIONS_APPEND=${{ matrix.configure_append }}

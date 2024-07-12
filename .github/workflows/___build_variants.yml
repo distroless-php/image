@@ -1,0 +1,77 @@
+name: _Build variants
+
+on:
+  workflow_call:
+    inputs:
+      types_directory:
+        type: string
+        required: false
+        default: "types"
+      types:
+        type: string
+        required: true
+      image_variants:
+        type: string
+        required: true
+      runs-on:
+        type: string
+        required: false
+        default: "ubuntu-latest"
+      platform:
+        type: string
+        required: false
+        default: "linux/amd64/v3"
+      enable_minor:
+        type: boolean
+        required: false
+        default: false        
+
+permissions:
+  packages: write
+
+jobs:
+  build:
+    name: Build variant images
+    runs-on: ${{ inputs.runs-on }}
+    strategy:
+      matrix:
+        types: ${{ fromJson(inputs.types) }}
+        include: ${{ fromJson(inputs.image_variants) }}
+    steps:
+      - name: Determine informations
+        id: determine_informations
+        env:
+          BASE_TAG: "ghcr.io/${{ github.repository }}:${{ matrix.tag }}${{ matrix.variant }}"
+          BASE_TAG_SHORT: "ghcr.io/${{ github.repository }}:${{ matrix.minor }}${{ matrix.variant }}"
+        run: |
+          echo "base=${BASE_TAG}-base" >> $GITHUB_OUTPUT
+          echo "values=${BASE_TAG}-${{ matrix.types }}${{ inputs.enable_minor && format(',{0}-{1}', env.BASE_TAG_SHORT, matrix.types) }}"
+      - name: Get Debian version
+        id: debian_version
+        run: |
+          echo value="$(docker run --rm -i "${{ steps.determine_informations.outputs.base }}" sh -c '. /etc/os-release && echo ${VERSION_ID}')" >> $GITHUB_OUTPUT
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 1
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Packages - Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and Push image
+        uses: docker/build-push-action@v6
+        with:
+          context: "${{ inputs.types_directory }}/${{ matrix.types }}"
+          push: true
+          pull: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          tags: ${{ steps.determine_informations.outputs.values }}
+          build-args: |
+            PLATFORM=${{ inputs.platform }}
+            BASE_IMAGE=${{ steps.determine_informations.outputs.base }}
+            DEBIAN_VERSION=${{ steps.debian_version.outputs.debian_version }}
