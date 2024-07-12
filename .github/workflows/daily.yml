@@ -16,6 +16,7 @@ jobs:
   build_base:
     needs: generate_image_variants
     uses: ./.github/workflows/___build_base.yml
+    secrets: inherit
     strategy:
       max-parallel: 3
     with:
