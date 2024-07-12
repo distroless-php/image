@@ -33,7 +33,7 @@ jobs:
       - name: Determine types
         id: determine_types
         run: |
-          echo values=$(ls "types" | jq -R -s -c 'split("\n")[:-1] | map({"types": .})' >> $GITHUB_OUTPUT
+          echo values=$(ls "types" | jq -R -s -c 'split("\n")[:-1] | map({"types": .})') >> $GITHUB_OUTPUT
     outputs:
       values: ${{ steps.determine_types.outputs.values }}
   mixin_types:
