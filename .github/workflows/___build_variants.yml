@@ -42,10 +42,11 @@ jobs:
           BASE_TAG_SHORT: "ghcr.io/${{ github.repository }}:${{ matrix.minor }}${{ matrix.variant }}"
         run: |
           echo "base=${BASE_TAG}-base" >> $GITHUB_OUTPUT
-          echo "values=${BASE_TAG}-${{ matrix.types }}${{ inputs.enable_minor && format(',{0}-{1}', env.BASE_TAG_SHORT, matrix.types) }}" >> $GITHUB_OUTPUT
+          echo "tags=${BASE_TAG}-${{ matrix.types }}${{ inputs.enable_minor && format(',{0}-{1}', env.BASE_TAG_SHORT, matrix.types) }}" >> $GITHUB_OUTPUT
       - name: Get Debian version
         id: debian_version
         run: |
+          docker pull "${{ steps.determine_informations.outputs.base }}"
           echo value="$(docker run --rm -i "${{ steps.determine_informations.outputs.base }}" sh -c '. /etc/os-release && echo ${VERSION_ID}')" >> $GITHUB_OUTPUT
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,8 +68,8 @@ jobs:
           push: true
           pull: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          tags: ${{ steps.determine_informations.outputs.values }}
+          tags: ${{ steps.determine_informations.outputs.tags }}
           build-args: |
             PLATFORM=${{ inputs.platform }}
             BASE_IMAGE=${{ steps.determine_informations.outputs.base }}
-            DEBIAN_VERSION=${{ steps.debian_version.outputs.debian_version }}
+            DEBIAN_VERSION=${{ steps.debian_version.outputs.value }}
