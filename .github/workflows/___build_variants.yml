@@ -36,7 +36,6 @@ jobs:
     strategy:
       max-parallel: 3
       matrix:
-        types: ${{ fromJson(inputs.types) }}
         include: ${{ fromJson(inputs.image_variants) }}
     steps:
       - name: test
