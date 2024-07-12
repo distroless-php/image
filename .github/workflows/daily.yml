@@ -37,10 +37,10 @@ jobs:
     outputs:
       values: ${{ steps.determine_types.outputs.values }}
   mixin_types:
-    needs: ["determine_php_versions", "determine_types"]
+    needs: ["generate_image_variants", "determine_types"]
     uses: ./.github/workflows/_mixin_values.yml
     with:
-      base: ${{ needs.determine_php_versions.outputs.values }}
+      base: ${{ needs.generate_image_variants.outputs.values }}
       join: ${{ needs.determine_types.outputs.values }}
   build_variants:
     needs: mixin_types
