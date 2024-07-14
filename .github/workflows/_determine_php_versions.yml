@@ -24,7 +24,7 @@ jobs:
         uses: octokit/request-action@v2.x
         id: get_tags
         with:
-          route: GET /repos/php/php-src/git/matching-reefs/tags
+          route: GET /repos/php/php-src/git/matching-refs/tags
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Determine version and hash
