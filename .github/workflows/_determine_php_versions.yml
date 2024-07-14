@@ -28,10 +28,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Determine version and hash
-        env:
-          PHP_TAGS: ${{ steps.get_tags.outputs.data }}
         run: |
-          echo "${PHP_TAGS}" > "tags.json"
+          echo "${{ steps.get_tags.outputs.data }}" > "tags.json"
           jq -r '.[]' "versions.json" | while read VERSION; do
             jq -r '.[] | (.ref | sub("refs/tags/php-"; "")) + " " + .object.sha' "tags.json" \
             | grep -E "^${VERSION}\.[0-9]+ " \
