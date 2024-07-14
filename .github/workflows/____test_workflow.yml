@@ -2,8 +2,6 @@ name: __Test workflow
 
 on:
   push:
-    paths:
-      - './.github/workflows/**'
 
 jobs:
   test_mixin_values:
