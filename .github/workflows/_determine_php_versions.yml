@@ -20,13 +20,18 @@ jobs:
         id: supported_versions
         run: |
           curl -sSL "https://www.php.net/releases/index.php?json" | jq -c "[..| objects | .supported_versions? // empty] | flatten" > "versions.json"
+      - name: Get PHP tags
+        uses: octokit/request-action@v2.x
+        id: get_tags
+        with:
+          route: GET /repos/php/php-src/git/matching-reefs/tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Determine version and hash
+        env:
+          PHP_TAGS: ${{ steps.get_tags.outputs.data }}
         run: |
-          curl -sSL \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/php/php-src/git/matching-refs/tags" > "tags.json"
+          echo "${PHP_TAGS}" > "tags.json"
           jq -r '.[]' "versions.json" | while read VERSION; do
             jq -r '.[] | (.ref | sub("refs/tags/php-"; "")) + " " + .object.sha' "tags.json" \
             | grep -E "^${VERSION}\.[0-9]+ " \
