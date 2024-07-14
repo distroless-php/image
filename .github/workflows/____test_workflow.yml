@@ -8,7 +8,7 @@ jobs:
     uses: ./.github/workflows/_mixin_values.yml
     with:
       base: '{["foo": 1, "bar": 2]}'
-      join: '{["bar": 3, "baz": 4]}'
+      join: '{["bongo": 3, "conga": 4]}'
   test_determine_php_versions:
     uses: ./.github/workflows/_determine_php_versions.yml
   result:
