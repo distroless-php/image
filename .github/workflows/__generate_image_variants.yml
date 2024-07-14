@@ -3,7 +3,7 @@ name: _Generate image variants
 on:
   workflow_call:
     inputs:
-      php_versions_json:
+      php_versions:
         type: string
         required: true
     outputs:
@@ -38,7 +38,7 @@ jobs:
     needs: yq
     uses: ./.github/workflows/_mixin_values.yml
     with:
-      base: ${{ inputs.php_versions_json }}
+      base: ${{ inputs.php_versions }}
       join: ${{ needs.yq.outputs.values }}
   variants:
     needs: mixin

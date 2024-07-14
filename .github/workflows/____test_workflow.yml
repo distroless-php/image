@@ -1,0 +1,29 @@
+on:
+  push:
+    paths:
+      - './.github/workflows'
+
+jobs:
+  test_mixin_values:
+    uses: ./.github/workflows/_mixin_values.yml
+    with:
+      base: '{["foo": 1, "bar": 2]}'
+      join: '{["bar": 3, "baz": 4]}'
+  test_determine_php_versions:
+    uses: ./.github/workflows/_determine_php_versions.yml
+  result:
+    needs:
+      - test_mixin_values
+      - test_determine_php_versions
+    runs-on: ubuntu-latest
+    steps:
+      - name: test_mixin_values
+        env:
+          TEST_MIXIN_VALUES: ${{ needs.test_mixin_values.outputs.values }}
+        run: |
+          echo "${TEST_MIXIN_VALUES}"
+      - name: test_determine_php_versions
+        env:
+          TEST_DETERMINE_PHP_VERSIONS: ${{ needs.test_determine_php_versions.outputs.values }}
+        run: |
+          echo "${TEST_DETERMINE_PHP_VERSIONS}"
