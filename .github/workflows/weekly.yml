@@ -10,7 +10,7 @@ jobs:
   determine_php_versions:
     uses: ./.github/workflows/_determine_php_versions.yml
     with:
-      ignore_versions: '["8.1", "8.2"]'
+      ignore_versions: '["8.1"]'
   generate_image_variants:
     needs: determine_php_versions
     uses: ./.github/workflows/__generate_image_variants.yml

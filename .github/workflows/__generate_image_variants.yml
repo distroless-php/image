@@ -21,6 +21,14 @@ jobs:
               configure_append: ""
               optimize_options_c_cpp: "-O2"
               optimize_options_ld: "-O1"
+            - variant: "-debug"
+              configure_append: "--enable-debug"
+              optimize_options_c_cpp: "-O0"
+              optimize_options_ld: "-O0"
+            - variant: "-opt"
+              configure_append: ""
+              optimize_options_c_cpp: "-O3"
+              optimize_options_ld: "-O2"
         id: yq
         run: |
           echo values=$(echo "${VALUE}" | yq -o=json) >> $GITHUB_OUTPUT
