@@ -9,7 +9,7 @@ ARG DP_PHP_LDFLAGS="-Wl,${DP_LDFLAGS_OPTIMIZE} -pie"
 ARG DP_PHP_INI_DIR="/usr/local/etc/php"
 ARG DP_PHP_DEB_PACKAGES="libgmp-dev libzip-dev libyaml-dev libzstd-dev libargon2-dev libcurl4-openssl-dev libonig-dev libreadline-dev libsodium-dev libsqlite3-dev libssl-dev zlib1g-dev"
 ARG DP_PHP_CONFIGURE_OPTIONS_APPEND=""
-ARG DP_PHP_CONFIGURE_OPTIONS="--enable-bcmath --enable-exif --enable-intl --enable-pcntl --enable-sockets --enable-sysvmsg --enable-sysvsem --enable-sysvshm --with-gmp --with-zip --with-pic --with-password-argon2 --with-sodium --with-pdo-sqlite=/usr --with-sqlite3=/usr --with-curl --with-iconv --with-openssl --with-readline --with-zlib --disable-phpdbg --disable-cgi --enable-fpm --with-fpm-user=nonroot --with-fpm-group=nonroot ${DP_PHP_CONFIGURE_OPTIONS_APPEND}"
+ARG DP_PHP_CONFIGURE_OPTIONS="--enable-bcmath --enable-exif --enable-intl --enable-pcntl --enable-sockets --enable-sysvmsg --enable-sysvsem --enable-sysvshm --with-gmp --with-zip --with-pic --enable-mysqlnd --with-password-argon2 --with-sodium --with-pdo-sqlite=/usr --with-sqlite3=/usr --with-curl --with-iconv --with-openssl --with-readline --with-zlib --disable-phpdbg --disable-cgi --enable-fpm --with-fpm-user=nonroot --with-fpm-group=nonroot ${DP_PHP_CONFIGURE_OPTIONS_APPEND}"
 
 FROM --platform="${PLATFORM}" debian:12
 
