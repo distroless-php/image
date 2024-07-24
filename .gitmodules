@@ -13,7 +13,7 @@
 [submodule "GNOME/libxml2"]
 	path = third_party/GNOME/libxml2
 	url = https://github.com/GNOME/libxml2.git
-	branch = v2.13.1
+	branch = v2.13.3
 [submodule "php/php-src"]
 	path = third_party/php/php-src
 	url = https://github.com/php/php-src.git
