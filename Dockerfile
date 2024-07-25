@@ -11,6 +11,17 @@ ARG DP_PHP_DEB_PACKAGES="libgmp-dev libzip-dev libyaml-dev libzstd-dev libargon2
 ARG DP_PHP_CONFIGURE_OPTIONS_APPEND=""
 ARG DP_PHP_CONFIGURE_OPTIONS="--enable-bcmath --enable-exif --enable-intl --enable-pcntl --enable-sockets --enable-sysvmsg --enable-sysvsem --enable-sysvshm --with-gmp --with-zip --with-pic --enable-mysqlnd --with-password-argon2 --with-sodium --with-pdo-sqlite=/usr --with-sqlite3=/usr --with-curl --with-iconv --with-openssl --with-readline --with-zlib --disable-phpdbg --disable-cgi --enable-fpm --with-fpm-user=nonroot --with-fpm-group=nonroot ${DP_PHP_CONFIGURE_OPTIONS_APPEND}"
 
+FROM --platform="${PLATFORM}" golang:latest AS golang
+
+COPY "./dependency_resolve" "/dependency_resolve"
+
+RUN apt-get update && apt-get install -y "binutils" \
+ && cd "/dependency_resolve" \
+ &&   go build -o="/usr/local/bin/dependency_resolve" . \
+ && cd - \
+ && strip --strip-all "/usr/local/bin/dependency_resolve" \
+ && dependency_resolve -v
+
 FROM --platform="${PLATFORM}" debian:12
 
 ARG DP_CFLAGS_OPTIMIZE
@@ -26,7 +37,7 @@ ARG DP_PHP_CONFIGURE_OPTIONS
 # base
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      "build-essential" "ca-certificates" "pkg-config" "autoconf" "automake" "bison" "re2c" "curl"
+      "build-essential" "ca-certificates" "pkg-config" "autoconf" "automake" "bison" "re2c" "curl" "binutils"
 
 # ICU
 COPY "third_party/unicode-org/icu" "/build/icu"
@@ -65,5 +76,5 @@ RUN apt-get update \
  &&   make install \
  && cd -
 
-COPY --chmod=755 "dependency_resolve/dependency_resolve" "/usr/local/bin/dependency_resolve"
+COPY --from=golang "/usr/local/bin/dependency_resolve" "/usr/local/bin/dependency_resolve"
 COPY --chmod=755 "distroless_php_add_binary" "/usr/local/bin/distroless_php_add_binary"

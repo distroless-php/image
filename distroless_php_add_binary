@@ -20,4 +20,4 @@ for BIN in "${@}"; do
     esac
 done
 
-dependency_resolve "/usr/bin/ldd" ${@} | xargs -I {} sh -c 'mkdir -p /rootfs/$(dirname "{}") && cp -apP "{}" /rootfs/{}'
+dependency_resolve ${@} | xargs -I {} sh -c 'mkdir -p /rootfs/$(dirname "{}") && cp -apP "{}" "/rootfs/{}" && (strip --strip-all "/rootfs/{}" || true)'
