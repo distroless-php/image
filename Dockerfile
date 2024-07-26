@@ -15,11 +15,9 @@ FROM --platform="${PLATFORM}" golang:latest AS golang
 
 COPY "./dependency_resolve" "/dependency_resolve"
 
-RUN apt-get update && apt-get install -y "binutils" \
- && cd "/dependency_resolve" \
+RUN cd "/dependency_resolve" \
  &&   go build -o="/usr/local/bin/dependency_resolve" . \
  && cd - \
- && strip --strip-all "/usr/local/bin/dependency_resolve" \
  && dependency_resolve -v
 
 FROM --platform="${PLATFORM}" debian:12
