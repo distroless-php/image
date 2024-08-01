@@ -5,7 +5,7 @@
 [submodule "alpinelinux/aports"]
 	path = third_party/alpinelinux/aports
 	url = https://github.com/alpinelinux/aports.git
-	branch = v3.20.1
+	branch = v3.20.2
 [submodule "unicode-org/icu"]
 	path = third_party/unicode-org/icu
 	url = https://github.com/unicode-org/icu.git
